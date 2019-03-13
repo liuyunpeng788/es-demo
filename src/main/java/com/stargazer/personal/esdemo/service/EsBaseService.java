@@ -2,33 +2,24 @@ package com.stargazer.personal.esdemo.service;
 
 import com.stargazer.personal.esdemo.dto.UserDto;
 import com.stargazer.personal.esdemo.repository.UserEsRepository;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.core.SearchResultMapper;
-import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import static com.stargazer.personal.esdemo.constant.Constant.*;
-import static com.stargazer.personal.esdemo.util.CommonUtils.parseEsDate;
 
 @Service
 public class EsBaseService {
@@ -65,13 +56,6 @@ public class EsBaseService {
      * @param strQuery 查询词
      */
     public void searchMultiTerm(String strQuery) {
-//         String[] terms = strQuery.split("[,&，\\s+]"); //根据多个分隔符分隔后，多个关键词一块查询
-//         BoolQueryBuilder builder = QueryBuilders.boolQuery();
-//        for(String term : terms){
-//            builder.must(new MatchPhraseQueryBuilder("description",term));
-//         }
-//
-//        Iterator<UserDto> iter = userEsRepository.search(builder).iterator();
         Iterator<UserDto> iter = builderQuery(strQuery);
         while (iter.hasNext()) {
             System.out.println(iter.next());
@@ -112,8 +96,8 @@ public class EsBaseService {
         return strQuery.split(sb.toString()); //根据多个分隔符分隔后，多个关键词一块查询
     }
 
-    @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
+//    @Autowired
+//    private ElasticsearchTemplate elasticsearchTemplate;
 
     /**
      * 高亮查询命中词
@@ -136,7 +120,7 @@ public class EsBaseService {
         /**
          * 实现方式1：较复杂
          */
-        /
+
 //        elasticsearchTemplate.queryForPage(searchQuery, UserDto.class, new SearchResultMapper() {
 //            @Override
 //            public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
