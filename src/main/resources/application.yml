@@ -1,0 +1,12 @@
+spring:
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+  #    date-format: java.text.SimpleDateFormat
+  data:
+    elasticsearch:
+      cluster-name: fc-es
+      cluster-nodes: 172.16.17.116:9300,172.16.17.117:9300,172.16.17.118:9300
+      repositories:
+        enabled: true
