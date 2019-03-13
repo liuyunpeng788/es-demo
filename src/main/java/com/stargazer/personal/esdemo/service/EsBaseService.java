@@ -33,8 +33,7 @@ public class EsBaseService {
     @Transactional
     public void putAll(List<UserDto> list) {
         userEsRepository.saveAll(list);
-//        list.forEach(x->userEsRepository.save(x));
-    }
+     }
 
     @Transactional
     public void deleteAll() {
@@ -43,9 +42,8 @@ public class EsBaseService {
 
     public void search(String strQuery) {
         QueryBuilder builder = new MatchPhraseQueryBuilder("description", strQuery);
-        Iterator<UserDto> iter = userEsRepository.search(builder).iterator();
-        while (iter.hasNext()) {
-            System.out.println(iter.next());
+        for (UserDto dto : userEsRepository.search(builder)) {
+            System.out.println(dto);
         }
 
     }
@@ -67,7 +65,8 @@ public class EsBaseService {
      * 根据查询词，查询相应的结果
      *
      * @param strQuery 查询词，包含分隔符
-     * @return
+     * @return 查询的结果列表
+     * @exception : 当查询结果为空时，可能抛出null异常
      */
     private Iterator<UserDto> builderQuery(String strQuery) {
         String[] terms = splitTerms(strQuery); //根据多个分隔符分隔后，多个关键词一块查询
