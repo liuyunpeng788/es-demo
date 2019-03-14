@@ -3,10 +3,7 @@ package com.stargazer.personal.esdemo.service;
 import com.stargazer.personal.esdemo.dto.UserDto;
 import com.stargazer.personal.esdemo.repository.UserEsRepository;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +45,11 @@ public class EsBaseService {
     }
 
     public void search(String strQuery) {
+
+        //MatchQueryBuilder输入的词条会被es解析并进行分词，且所有大些会被自动转换成全小写
+//        QueryBuilder builder = new MatchQueryBuilder("description", strQuery);
+
+        //短语查询，输入的词条不会被分词处理，而是直接作为一个短语进行在倒排索引中查询，如果没有，就返回一个空
         QueryBuilder builder = new MatchPhraseQueryBuilder("description", strQuery);
         for (UserDto dto : userEsRepository.search(builder)) {
             System.out.println(dto);
