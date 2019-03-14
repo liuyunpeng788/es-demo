@@ -181,7 +181,7 @@ public class EsDemoApplicationTests {
 
     @Test
     public void queryTest(){
-        String strQuery = "易贸";
+        String strQuery = "易贸生";
        esBaseService.search(strQuery);
     }
 
