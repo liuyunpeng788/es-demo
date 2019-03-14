@@ -52,7 +52,8 @@ public class EsBaseService {
         //match_phrase 查询首先将查询字符串解析成一个词项列表，然后对这些词项进行搜索，但只保留那些包含 全部 搜索词项，且 位置 与搜索词项相同的文档。
         // 比如说，对于搜索短语：“Quick brown fox”，如果倒排索引中存在这三个词“Quick”,“brown”,“fox”，其他们的position 值依次相差1，则命中匹配。返回该文档。
         //具体可以参见官网文档： https://www.elastic.co/guide/cn/elasticsearch/guide/current/phrase-matching.html
-        //也可以粗暴理解为，如果倒排索引中包含该短语，则返回
+//      // 此外，可以通过设置slop(1) ， 使得短语“quick fox” 可以命中包含“Quick brown fox” 的文档。它表示可以容忍位置差为1的词语
+        //也可以粗暴理解为，如果倒排索引中包含该短语，则返回。
         QueryBuilder builder = new MatchPhraseQueryBuilder("description", strQuery);
         for (UserDto dto : userEsRepository.search(builder)) {
             System.out.println(dto);
