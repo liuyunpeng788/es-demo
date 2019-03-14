@@ -2,14 +2,20 @@ package com.stargazer.personal.esdemo.service;
 
 import com.stargazer.personal.esdemo.dto.UserDto;
 import com.stargazer.personal.esdemo.repository.UserEsRepository;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.SearchResultMapper;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.stereotype.Service;
@@ -20,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.stargazer.personal.esdemo.constant.Constant.*;
+import static com.stargazer.personal.esdemo.util.CommonUtils.parseEsDate;
 
 @Service
 public class EsBaseService {
@@ -95,8 +102,8 @@ public class EsBaseService {
         return strQuery.split(sb.toString()); //根据多个分隔符分隔后，多个关键词一块查询
     }
 
-//    @Autowired
-//    private ElasticsearchTemplate elasticsearchTemplate;
+    @Autowired
+    private ElasticsearchTemplate elasticsearchTemplate;
 
     /**
      * 高亮查询命中词
@@ -112,7 +119,8 @@ public class EsBaseService {
         for (String term : terms) {
             queryBuilders.must(new MatchPhraseQueryBuilder("description", term));
         }
-        nativeSearchQueryBuilder.withPageable(PageRequest.of(0,10, new Sort(Sort.Direction.DESC,"age","birthday"))); // sort 支持多个字段排序
+        //按相关性、年龄、生日 倒叙排序
+        nativeSearchQueryBuilder.withPageable(PageRequest.of(0,10, new Sort(Sort.Direction.DESC,"_score","age","birthday"))); // sort 支持多个字段排序
         nativeSearchQueryBuilder.withQuery(queryBuilders);
         nativeSearchQueryBuilder.withHighlightFields(new HighlightBuilder.Field("description").preTags(preTag).postTags(postTag));
         SearchQuery searchQuery = nativeSearchQueryBuilder.build();
@@ -120,33 +128,34 @@ public class EsBaseService {
          * 实现方式1：较复杂
          */
 
-//        elasticsearchTemplate.queryForPage(searchQuery, UserDto.class, new SearchResultMapper() {
-//            @Override
-//            public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
-//                for (SearchHit searchHit : response.getHits()) {
-//                    if (response.getHits().getHits().length <= 0) {
-//                        return null;
-//                    }
-//                    UserDto user = new UserDto();
-//                    user.setId(searchHit.getId());
-//
-//                    user.setBirthday(parseEsDate((String)searchHit.getSourceAsMap().get("birthday")));
-//                    user.setName((String)searchHit.getSourceAsMap().get("name"));
-//                    user.setAge((Integer) searchHit.getSourceAsMap().getOrDefault("age",0));
-//                    user.setDescription(searchHit.getHighlightFields().get("description").fragments()[0].toString());
-//                     System.out.println(user);
-//                }
-//                return null;
-//            }
-//        });
+        elasticsearchTemplate.queryForPage(searchQuery, UserDto.class, new SearchResultMapper() {
+            @Override
+            public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+                for (SearchHit searchHit : response.getHits()) {
+                    if (response.getHits().getHits().length <= 0) {
+                        return null;
+                    }
+                    UserDto user = new UserDto();
+                    user.setId(searchHit.getId());
 
-        /**
-         * 实现方式2： 非常简洁
-         */
-        Iterator<UserDto> iter = userEsRepository.search(searchQuery).iterator();
-        while (iter.hasNext()) {
-            System.out.println(iter.next());
-        }
+                    user.setBirthday(parseEsDate((String)searchHit.getSourceAsMap().get("birthday")));
+                    user.setName((String)searchHit.getSourceAsMap().get("name"));
+                    user.setAge((Integer) searchHit.getSourceAsMap().getOrDefault("age",0));
+                    user.setDescription(searchHit.getHighlightFields().get("description").fragments()[0].toString());
+                     System.out.println(searchHit.getScore() + "---" + user);
+                }
+                return null;
+            }
+        });
+
+//        /**
+//         * 实现方式2： 非常简洁 。可以分页，但无法高亮
+//         */
+//        Iterator<UserDto> iter = userEsRepository.search(searchQuery).iterator();
+//        while (iter.hasNext()) {
+//
+//            System.out.println(iter.next());
+//        }
 
     }
 }
